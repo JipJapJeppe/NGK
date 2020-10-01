@@ -13,9 +13,9 @@ def main(argv):
 	print("The client is connecting...")
 	clientSocket.connect((serverName, PORT))
 	print ("Client Connected")
-    filename = input("Filename? -> ")
+filename = input("Filename? -> ")
 	
-    if (filename != "q"):
+if (filename != "q"):
         s.send(filename.encode())
         data = s.recv(1024)
         if (data[:6] == "EXISTS"):
@@ -32,7 +32,7 @@ def main(argv):
                     totalRecv += len(data)
                     f.write(data)
                     print("{0:.2f}".format((totalRecv/float(filesize))*100 + "%Done"));
-                	print("Download Complete!")
+                print("Download Complete!")
 
         else:
             print("File does not exist!");	
