@@ -4,7 +4,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from lib import Lib #import klassen Lib
 
 HOST = ""
-PORT = 9002
+PORT = 9004
 BUFSIZE = 1000
 
 def main(argv):
@@ -18,17 +18,22 @@ def main(argv):
         print("Socket accept", addr)
         
         fileName = Lib.readTextTCP(connectionSocket) #Modtager sti og filnavn fra client
-
+        #fileName2 = Lib.extractFilename(fileName)
         print("Message received from client:", fileName)
         
-        if Lib.check_File_Exists(fileName) != 0: 
-            file = open(fileName,'rb') #opens file without truncation
-            file2 = file.read(all)
-            fileSize = Lib.getFileSizeTCP(connectionSocket)
-            sendFile(file2, fileSize, connectionSocket)
-        else:
-            Lib.writeTextTCP("File not found", connectionSocket)    #Sender error message til client
-     
+        fileExists = Lib.check_File_Exists(fileName)
+        fileExists2 = str(fileExists)
+        #if  fileExists != 0: #returns fileSize
+            #file = open(fileName2,'rb') #opens file without truncation
+            #file2 = file.read(all)
+        #fileSize = Lib.getFileSizeTCP(connectionSocket)
+        Lib.writeTextTCP(fileExists2, connectionSocket)
+    
+        sendFile(fileName, fileExists, connectionSocket)
+        #else:
+            #Lib.writeTextTCP("File not found", connectionSocket)    #Sender error message til client
+    connectionSocket.close()
+
 #  Hvis filen findes skal filens størrelse overføres til client som en tekststreng, hvorefter selve filen overføres fra server til client i segmenter på max.
 # 1000 bytes ad gangen – indtil filen er overført fuldstændigt.
 
@@ -37,9 +42,11 @@ def sendFile(file,  fileSize,  conn):
     with open(file, 'rb') as file1:
         for i in range(fileSize):
             bytes_read = file1.read(BUFSIZE)
+            print ("bytes read:", bytes_read)
             if not bytes_read:
                 break
-            conn.sendall(bytes_read)
+            conn.send(bytes_read)
+
 
 def sendFile1(file,  fileSize,  conn):
 	# TO DO Your Code
