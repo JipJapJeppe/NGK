@@ -1,63 +1,41 @@
-#!/usr/bin/python3
-import sys
 import socket
-from lib import Lib
-from socket import socket, AF_INET, SOCK_STREAM
+import threading
 
-HOST = ""
-PORT = 9919
+SERVER = socket.gethostbyname(socket.gethostname())
+PORT = 5050
 BUFSIZE = 1000
+ADDR = (SERVER, PORT)
+FORMAT = 'utf-8'
+DISCONNECT_MESSAGE = "!DISCONNECT"
 
-def main(argv):
-	# TO DO Your Code
+serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serverSocket.bind((ADDR))
 
-    serverSocket = socket(AF_INET, SOCK_STREAM)
-    #socket has 2 parameters domain and type
-    # two ways stream is picked
-    serverSocket.bind((HOST,PORT))
-    serverSocket.listen(1)
-    #defines amount of queue members
-    while 1:
-        print("The server is ready to accept a connection")
-        connectionSocket, addr = serverSocket.accept()
-        # accept()-> Tuple[socket, _RetAddress]
-        # connectionSocket it is the destination to the client who got accepted
+def handle_client(conn,addr):
+    print(f"[NEW CONNECTION] {addr} connected.")
 
-        print("Socket is accepted", addr)
-        
-        #decode text into filedestination
-        filedestination = Lib.readTextTCP(connectionSocket)
+    connected = True
+    while connected:
+        msg_length = conn.recv(BUFSIZE).decode(FORMAT)
+        if msg_length:
+            msg_length = int(msg_length)
+            msg = conn.recv(msg_length).decode(FORMAT)
+            if msg == DISCONNECT_MESSAGE:
+                connected = False
+                
+            print(f"[{addr}] says -> {msg}")
+            conn.send("Msg receiced".encode(FORMAT))
 
-        print("filedestination requested is ",filedestination)
-        
-        #extract the file name to textFileName
-        textFileName = Lib.extractFilename(filedestination)
+    conn.close()
 
-        #Return size of file into fileSize
-        fileSize = Lib.check_File_Exists(textFileName)
-        
-        
-        #sep=' ' 
-        #Call sendFile
-        sendFile(textFileName,fileSize, connectionSocket)    
-        connectionSocket.close()  
-        
+def start():
+    serverSocket.listen()
+    print(f"[LISTENING] Server is listening on {SERVER}")
+    while True:
+        conn, addr = serverSocket.accept()
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() -1}")
 
-def sendFile(fileName,  fileSize,  conn):
-	# TO DO Your Code
-    Lib.writeTextTCP(str(fileSize), conn)
-    fo = open(fileName, "rb")
-
-    print("sendFile out of while")
-    while  fileSize >= BUFSIZE :
-        print("sendFile inside of while")
-        var = fo.read(BUFSIZE)
-        conn.send(var)
-        
-        fileSize -= BUFSIZE
-    var = fo.read(BUFSIZE)
-    conn.send(var)
-    fo.close()
-
-if __name__ == "__main__":
-   main(sys.argv[1:])
+print("[Starting] server is starting")
+start()
