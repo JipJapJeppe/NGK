@@ -3,7 +3,7 @@ import os
 from socket import socket, AF_INET, SOCK_STREAM
 from lib import Lib
 
-PORT = 9002
+PORT = 9006
 BUFSIZE = 1000
 serverName = "10.0.0.1"
 
